@@ -1,0 +1,212 @@
+[
+  {
+    "id": 0,
+    "filename": "sample_000.wav",
+    "text": "Oh wow, that was really amazing",
+    "label": 1,
+    "tone": "flat"
+  },
+  {
+    "id": 1,
+    "filename": "sample_001.wav",
+    "text": "Great job, you're a genius",
+    "label": 1,
+    "tone": "flat"
+  },
+  {
+    "id": 2,
+    "filename": "sample_002.wav",
+    "text": "Sure, because that always works out perfectly",
+    "label": 1,
+    "tone": "exaggerated"
+  },
+  {
+    "id": 3,
+    "filename": "sample_003.wav",
+    "text": "Oh fantastic, just what I needed today",
+    "label": 1,
+    "tone": "flat"
+  },
+  {
+    "id": 4,
+    "filename": "sample_004.wav",
+    "text": "Yeah right, like that's going to happen",
+    "label": 1,
+    "tone": "flat"
+  },
+  {
+    "id": 5,
+    "filename": "sample_005.wav",
+    "text": "What a surprise, nobody saw that coming",
+    "label": 1,
+    "tone": "exaggerated"
+  },
+  {
+    "id": 6,
+    "filename": "sample_006.wav",
+    "text": "Oh brilliant, another meeting about meetings",
+    "label": 1,
+    "tone": "flat"
+  },
+  {
+    "id": 7,
+    "filename": "sample_007.wav",
+    "text": "Thanks so much for that incredibly helpful advice",
+    "label": 1,
+    "tone": "flat"
+  },
+  {
+    "id": 8,
+    "filename": "sample_008.wav",
+    "text": "Well that went exactly as planned",
+    "label": 1,
+    "tone": "flat"
+  },
+  {
+    "id": 9,
+    "filename": "sample_009.wav",
+    "text": "Oh how wonderful, more homework",
+    "label": 1,
+    "tone": "exaggerated"
+  },
+  {
+    "id": 10,
+    "filename": "sample_010.wav",
+    "text": "Really impressive work there buddy",
+    "label": 1,
+    "tone": "flat"
+  },
+  {
+    "id": 11,
+    "filename": "sample_011.wav",
+    "text": "Oh I just love waiting in long lines",
+    "label": 1,
+    "tone": "flat"
+  },
+  {
+    "id": 12,
+    "filename": "sample_012.wav",
+    "text": "Wow you really outdid yourself this time",
+    "label": 1,
+    "tone": "exaggerated"
+  },
+  {
+    "id": 13,
+    "filename": "sample_013.wav",
+    "text": "Perfect timing as always",
+    "label": 1,
+    "tone": "flat"
+  },
+  {
+    "id": 14,
+    "filename": "sample_014.wav",
+    "text": "Oh sure blame it on the weather",
+    "label": 1,
+    "tone": "flat"
+  },
+  {
+    "id": 15,
+    "filename": "sample_015.wav",
+    "text": "That was a really great presentation",
+    "label": 0,
+    "tone": "enthusiastic"
+  },
+  {
+    "id": 16,
+    "filename": "sample_016.wav",
+    "text": "I genuinely enjoyed the movie last night",
+    "label": 0,
+    "tone": "enthusiastic"
+  },
+  {
+    "id": 17,
+    "filename": "sample_017.wav",
+    "text": "The weather is beautiful today",
+    "label": 0,
+    "tone": "normal"
+  },
+  {
+    "id": 18,
+    "filename": "sample_018.wav",
+    "text": "Thank you for helping me with this project",
+    "label": 0,
+    "tone": "warm"
+  },
+  {
+    "id": 19,
+    "filename": "sample_019.wav",
+    "text": "I think we should take a different approach",
+    "label": 0,
+    "tone": "normal"
+  },
+  {
+    "id": 20,
+    "filename": "sample_020.wav",
+    "text": "Can you pass me the salt please",
+    "label": 0,
+    "tone": "normal"
+  },
+  {
+    "id": 21,
+    "filename": "sample_021.wav",
+    "text": "The test results look promising",
+    "label": 0,
+    "tone": "enthusiastic"
+  },
+  {
+    "id": 22,
+    "filename": "sample_022.wav",
+    "text": "I appreciate your honest feedback",
+    "label": 0,
+    "tone": "warm"
+  },
+  {
+    "id": 23,
+    "filename": "sample_023.wav",
+    "text": "Let me check the schedule for tomorrow",
+    "label": 0,
+    "tone": "normal"
+  },
+  {
+    "id": 24,
+    "filename": "sample_024.wav",
+    "text": "This is the best pizza I have ever had",
+    "label": 0,
+    "tone": "enthusiastic"
+  },
+  {
+    "id": 25,
+    "filename": "sample_025.wav",
+    "text": "Good morning, how are you doing",
+    "label": 0,
+    "tone": "warm"
+  },
+  {
+    "id": 26,
+    "filename": "sample_026.wav",
+    "text": "I need to finish this report by Friday",
+    "label": 0,
+    "tone": "normal"
+  },
+  {
+    "id": 27,
+    "filename": "sample_027.wav",
+    "text": "That concert was absolutely incredible",
+    "label": 0,
+    "tone": "enthusiastic"
+  },
+  {
+    "id": 28,
+    "filename": "sample_028.wav",
+    "text": "Could you explain that one more time",
+    "label": 0,
+    "tone": "normal"
+  },
+  {
+    "id": 29,
+    "filename": "sample_029.wav",
+    "text": "Happy birthday, hope you have a great day",
+    "label": 0,
+    "tone": "warm"
+  }
+]

@@ -1,0 +1,16 @@
+# SarcasTone
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+*.pt
+*.pth
+saved_models/
+data/samples/*.wav
+.env
+venv/
+.venv/
+extract_ppt.py
+temp_copy.pptx

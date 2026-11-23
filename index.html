@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SarcasTone™ — Multimodal Speech Sarcasm Intelligence</title>
+    <meta name="description" content="Multimodal speech sarcasm detection using acoustic prosody (F0, energy, tempo, MFCCs) and lexical semantics (DistilBERT).">
+    
+    <!-- Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Top Navigation Bar -->
+        <header class="top-nav" role="banner">
+            <div class="nav-container">
+                <div class="nav-left">
+                    <div class="brand-identity">
+                        <div class="brand-mark" aria-hidden="true">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 2v20M17 5v14M7 9v6M22 8v8M2 11v2"/>
+                            </svg>
+                        </div>
+                        <div class="brand-text-group">
+                            <div class="brand-row">
+                                <span class="brand-title">SarcasTone<span class="brand-tm">™</span></span>
+                                <span class="version-pill">v2.4</span>
+                            </div>
+                            <span class="brand-tagline">Multimodal Speech Prosody & Lexical Intent Classifier</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="nav-right">
+                    <span class="model-badge">DistilBERT + Prosody (794-d Fusion)</span>
+                    <div class="system-status-indicator" id="systemStatus" title="System Status: Operational">
+                        <span class="status-pulse-dot"></span>
+                        <span class="status-text">Ready</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Workspace -->
+        <main class="workbench-container" id="workbench" role="main">
+            <!-- Audio Ingestion & Capture Panel -->
+            <section class="panel ingestion-panel" aria-labelledby="ingestionHeading">
+                <div class="panel-header">
+                    <div class="panel-title-group">
+                        <h2 class="panel-title" id="ingestionHeading">Audio Ingestion & Signal Capture</h2>
+                        <p class="panel-desc">Stream live microphone speech via browser VAD or ingest benchmark WAV files (16 kHz PCM Mono)</p>
+                    </div>
+                </div>
+
+                <!-- Waveform Display Screen -->
+                <div class="waveform-monitor-container">
+                    <div class="waveform-screen">
+                        <canvas id="waveformCanvas" class="waveform-canvas" width="1000" height="130"></canvas>
+                        
+                        <!-- Overlay Idle Message -->
+                        <div class="waveform-overlay" id="visualizerOverlay">
+                            <span class="waveform-hint">Microphone channel standby · Press Record Voice or select a Benchmark Sample</span>
+                        </div>
+
+                        <!-- Live Recording State Badge -->
+                        <div class="recording-badge hidden" id="recordingBadge" role="status" aria-live="polite">
+                            <span class="rec-pulsar"></span>
+                            <span class="rec-label" id="recStatusText">STREAMING AUDIO</span>
+                            <span class="rec-timer" id="recordTimer">00:00</span>
+                        </div>
+                    </div>
+
+                    <!-- Voice Activity Detection (VAD) Meter -->
+                    <div class="vad-meter-strip">
+                        <div class="vad-header">
+                            <span class="vad-caption">Voice Activity Level (RMS Energy)</span>
+                            <span class="vad-reading" id="vadStatus">Awaiting audio input</span>
+                        </div>
+                        <div class="vad-track-container" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                            <div class="vad-progress-fill" id="vadLevel"></div>
+                            <div class="vad-speech-marker" title="Speech Threshold Trigger">
+                                <span class="marker-flag">Speech Gate</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Input Controls Bar -->
+                <div class="ingestion-control-bar">
+                    <div class="primary-actions">
+                        <button id="recordBtn" class="btn btn-primary btn-record" title="Start microphone recording with automatic pause detection">
+                            <span class="btn-indicator-dot"></span>
+                            <span class="btn-text">Record Voice</span>
+                        </button>
+
+                        <label class="btn btn-secondary btn-upload" title="Upload local audio file">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="17 8 12 3 7 8"></polyline>
+                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                            </svg>
+                            <span>Upload File</span>
+                            <input type="file" id="fileUpload" accept="audio/*,.wav,.mp3,.m4a" class="file-input-hidden">
+                        </label>
+                    </div>
+
+                    <!-- Benchmark Samples -->
+                    <div class="benchmark-suite">
+                        <span class="suite-title">Benchmark Samples:</span>
+                        <div class="preset-pill-group" role="group" aria-label="Preset Benchmark Samples">
+                            <button class="preset-pill" data-id="0" title="Deadpan sarcasm benchmark">
+                                <span class="pill-dot dot-sarcastic"></span>
+                                <span class="pill-quote">"Oh wow, really amazing"</span>
+                                <span class="pill-category">Deadpan</span>
+                            </button>
+                            <button class="preset-pill" data-id="15" title="Genuine praise benchmark">
+                                <span class="pill-dot dot-genuine"></span>
+                                <span class="pill-quote">"Great presentation"</span>
+                                <span class="pill-category">Genuine</span>
+                            </button>
+                            <button class="preset-pill" data-id="2" title="Mocking sarcasm benchmark">
+                                <span class="pill-dot dot-sarcastic"></span>
+                                <span class="pill-quote">"Sure, that works perfectly"</span>
+                                <span class="pill-category">Mocking</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Loading Indicator -->
+            <div id="loadingSection" class="panel loading-panel hidden" role="alert" aria-busy="true">
+                <div class="loading-grid">
+                    <div class="enterprise-spinner"></div>
+                    <div class="loading-metadata">
+                        <h3 class="loading-title">Processing Multimodal Signal Pipeline...</h3>
+                        <p class="loading-desc">Extracting acoustic prosody ($F_0$ pitch track, RMS loudness, speech rate, 13-band MFCCs) and computing DistilBERT 768-d semantic representations.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analysis & Results Dashboard -->
+            <section id="resultsSection" class="results-dashboard hidden" aria-labelledby="resultsHeading">
+                <h2 id="resultsHeading" class="sr-only">Forensic Analysis Results</h2>
+
+                <!-- Primary Classification Result Hero -->
+                <div class="verdict-banner-card" id="verdictHeroCard">
+                    <!-- Probability Ring -->
+                    <div class="gauge-module">
+                        <div class="svg-gauge-wrap">
+                            <svg class="enterprise-gauge-svg" viewBox="0 0 160 160" aria-hidden="true">
+                                <circle class="gauge-bg-ring" cx="80" cy="80" r="66" />
+                                <circle class="gauge-active-ring" id="ringProgress" cx="80" cy="80" r="66" />
+                            </svg>
+                            <div class="gauge-center-readout">
+                                <span class="gauge-percentage" id="sarcasmProb">0%</span>
+                                <span class="gauge-metric-label">Probability</span>
+                            </div>
+                        </div>
+                        <span class="enterprise-pill" id="confidenceValue">Confidence: 0.0%</span>
+                    </div>
+
+                    <!-- Verdict Details Column -->
+                    <div class="verdict-intelligence-body">
+                        <div class="verdict-status-row">
+                            <span class="badge-status-marker" id="verdictBeacon">Classification Finalized</span>
+                            <span class="badge-conflict-marker" id="conflictChip">Harmonic Alignment</span>
+                        </div>
+
+                        <div class="verdict-headline-container">
+                            <h3 class="verdict-primary-text" id="verdictHeadline">ANALYZING...</h3>
+                        </div>
+
+                        <!-- Delivery Archetype Card -->
+                        <div class="archetype-container">
+                            <div class="archetype-icon-box">
+                                <span class="archetype-emoji" id="archetypeIcon">🧊</span>
+                            </div>
+                            <div class="archetype-details">
+                                <div class="archetype-header-row">
+                                    <span class="archetype-classification-name" id="archetypeName">Deadpan Delivery</span>
+                                    <span class="archetype-subtag">Prosodic Archetype</span>
+                                </div>
+                                <p class="archetype-narrative" id="archetypeDescription">
+                                    Affirmative phrasing delivered with flat acoustic pitch inflection. The absence of pitch contour signals sarcastic inversion.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Action Toolbar -->
+                        <div class="dashboard-toolbar">
+                            <button id="heroPlayBtn" class="btn btn-secondary btn-sm" title="Replay current utterance audio">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                                </svg>
+                                <span class="btn-text">Play Audio</span>
+                            </button>
+                            <button id="copyReportBtn" class="btn btn-secondary btn-sm" title="Copy structured Markdown analysis report">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                </svg>
+                                <span>Copy Report</span>
+                            </button>
+                            <button id="exportJsonBtn" class="btn btn-secondary btn-sm" title="Export full JSON payload">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                </svg>
+                                <span>Export JSON</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Studio Audio Scrubbing Rack -->
+                <div class="panel studio-player-panel">
+                    <div class="player-controls-row">
+                        <button id="audioPlayToggle" class="btn-play-pause" title="Toggle audio playback" aria-label="Toggle playback">
+                            <span id="playIcon">▶</span>
+                        </button>
+                        <div class="playback-timer" aria-live="off">
+                            <span id="currentTime" class="time-readout">00:00.0</span>
+                            <span class="time-sep">/</span>
+                            <span id="totalDuration" class="time-readout">00:00.0</span>
+                        </div>
+                        <div class="scrubber-track-wrap">
+                            <input type="range" id="audioScrubber" class="enterprise-scrubber" min="0" max="100" value="0" step="0.1" aria-label="Audio scrubber">
+                        </div>
+                        <div class="speed-toggle-suite" role="group" aria-label="Playback Speed">
+                            <button class="speed-btn active" data-speed="1.0">1.0×</button>
+                            <button class="speed-btn" data-speed="0.75">0.75×</button>
+                            <button class="speed-btn" data-speed="1.25">1.25×</button>
+                        </div>
+                    </div>
+                    <audio id="coreAudioElement" preload="auto" class="hidden-audio"></audio>
+                </div>
+
+                <!-- Fundamental Pitch Track (F0 Contour) with Synchronized Scrubber -->
+                <div class="panel pitch-track-panel">
+                    <div class="panel-header">
+                        <div class="panel-title-group">
+                            <h3 class="panel-title">Fundamental Pitch Track ($F_0$ Contour)</h3>
+                            <p class="panel-desc">Time-frequency vocal inflection curve · Click anywhere on graph to reposition playhead</p>
+                        </div>
+                    </div>
+
+                    <div class="pitch-graph-body">
+                        <div class="pitch-canvas-wrapper">
+                            <canvas id="pitchContourCanvas" class="pitch-canvas" width="1000" height="180"></canvas>
+                            <div class="pitch-playhead-line" id="pitchLaserCursor"></div>
+                        </div>
+                        <div class="pitch-legend-bar">
+                            <div class="legend-group">
+                                <span class="legend-swatch swatch-monotone"></span>
+                                <span class="legend-text">Monotone Flat Delivery ($F_0$ Std &lt; 25 Hz)</span>
+                            </div>
+                            <div class="legend-group">
+                                <span class="legend-swatch swatch-modulated"></span>
+                                <span class="legend-text">Dynamic Pitch Modulation</span>
+                            </div>
+                            <div class="legend-group">
+                                <span class="legend-swatch swatch-playhead"></span>
+                                <span class="legend-text">Synchronized Playhead</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lexical vs Acoustic Discrepancy (Token Attribution) -->
+                <div class="panel discrepancy-panel">
+                    <div class="panel-header">
+                        <div class="panel-title-group">
+                            <h3 class="panel-title">Lexical vs. Acoustic Discrepancy (Token Attribution)</h3>
+                            <p class="panel-desc">Word-level contextual polarity against vocal delivery tone</p>
+                        </div>
+                    </div>
+
+                    <div class="discrepancy-container">
+                        <!-- Token Chips -->
+                        <div class="token-flow-container" id="tokenStream" aria-label="Word Token Polarity Stream"></div>
+
+                        <!-- Token Detail Inspector Box -->
+                        <div class="token-inspection-card" id="tokenInspectorBox">
+                            <span class="inspector-prompt">Select or hover over any word token above to inspect its exact lexical score and acoustic alignment.</span>
+                        </div>
+
+                        <!-- Discrepancy Delta Formula Strip -->
+                        <div class="discrepancy-metric-strip">
+                            <div class="discrepancy-card">
+                                <span class="disc-label">Literal Semantics</span>
+                                <span class="disc-value" id="lexicalValence">+0.00</span>
+                                <span class="disc-badge" id="lexicalTag">Neutral</span>
+                            </div>
+                            <div class="disc-operator">−</div>
+                            <div class="discrepancy-card">
+                                <span class="disc-label">Acoustic Valence</span>
+                                <span class="disc-value" id="acousticValence">+0.00</span>
+                                <span class="disc-badge" id="acousticTag">Neutral</span>
+                            </div>
+                            <div class="disc-operator">=</div>
+                            <div class="discrepancy-card disc-contrast-highlight">
+                                <span class="disc-label">Contrast Delta</span>
+                                <span class="disc-value" id="polarityGap">0.00Δ</span>
+                                <span class="disc-badge" id="polarityGapTag">Harmonic Alignment</span>
+                            </div>
+                        </div>
+
+                        <!-- Technical Narrative -->
+                        <div class="diagnostic-narrative-box">
+                            <p class="narrative-text" id="saliencyNarrative">
+                                Analysis pending. Select an audio input to compute lexical-prosodic divergence.
+                            </p>
+                        </div>
+
+                        <!-- Emoji Detection Bar -->
+                        <div class="emoji-recognition-bar hidden" id="emojiRecognitionBar">
+                            <span class="emoji-bar-label">Detected Emoji Modifiers:</span>
+                            <div class="emoji-pill-list" id="emojiTags"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Deep Telemetry Grid -->
+                <div class="telemetry-bento-grid">
+                    <!-- Column 1: Radar & Ablation -->
+                    <div class="bento-column">
+                        <!-- Prosodic Feature Radar -->
+                        <div class="panel subpanel">
+                            <div class="panel-header">
+                                <div class="panel-title-group">
+                                    <h3 class="panel-title">Prosodic Feature Radar</h3>
+                                    <p class="panel-desc">6-axis normalized prosodic vector vs. genuine baseline</p>
+                                </div>
+                            </div>
+                            <div class="radar-layout">
+                                <div class="radar-canvas-container">
+                                    <canvas id="radarCanvas" class="radar-canvas" width="340" height="340"></canvas>
+                                </div>
+                                <div class="radar-metrics-matrix">
+                                    <div class="matrix-cell">
+                                        <span class="matrix-name">Pitch Flatness</span>
+                                        <span class="matrix-val" id="valFlatness">0%</span>
+                                    </div>
+                                    <div class="matrix-cell">
+                                        <span class="matrix-name">Hyperbole</span>
+                                        <span class="matrix-val" id="valHyperbole">0%</span>
+                                    </div>
+                                    <div class="matrix-cell">
+                                        <span class="matrix-name">Vocal Drawl</span>
+                                        <span class="matrix-val" id="valDrawl">0%</span>
+                                    </div>
+                                    <div class="matrix-cell">
+                                        <span class="matrix-name">Energy Contrast</span>
+                                        <span class="matrix-val" id="valContrast">0%</span>
+                                    </div>
+                                    <div class="matrix-cell">
+                                        <span class="matrix-name">Modal Divergence</span>
+                                        <span class="matrix-val" id="valDivergence">0%</span>
+                                    </div>
+                                    <div class="matrix-cell">
+                                        <span class="matrix-name">Irony Markers</span>
+                                        <span class="matrix-val" id="valMarkers">0%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Ablation Study & Confidence Comparison -->
+                        <div class="panel subpanel">
+                            <div class="panel-header">
+                                <div class="panel-title-group">
+                                    <h3 class="panel-title">Model Ablation & Confidence Comparison</h3>
+                                    <p class="panel-desc">Unimodal baselines vs. multimodal concatenated fusion</p>
+                                </div>
+                            </div>
+                            <div class="ablation-stack">
+                                <!-- Text Baseline -->
+                                <div class="ablation-row">
+                                    <div class="ablation-meta">
+                                        <span class="model-name">Text-Only Baseline</span>
+                                        <span class="model-arch">DistilBERT (768-d Contextual Embedding)</span>
+                                    </div>
+                                    <div class="ablation-track-wrap">
+                                        <div class="ablation-track">
+                                            <div class="ablation-fill fill-blue" id="textMeter"></div>
+                                        </div>
+                                    </div>
+                                    <div class="ablation-score-box">
+                                        <span class="score-num" id="textScore">0%</span>
+                                        <span class="score-badge" id="textChip">Standby</span>
+                                    </div>
+                                </div>
+
+                                <!-- Audio Baseline -->
+                                <div class="ablation-row">
+                                    <div class="ablation-meta">
+                                        <span class="model-name">Audio-Only Baseline</span>
+                                        <span class="model-arch">Librosa Prosody (26-d Acoustic Features)</span>
+                                    </div>
+                                    <div class="ablation-track-wrap">
+                                        <div class="ablation-track">
+                                            <div class="ablation-fill fill-indigo" id="audioMeter"></div>
+                                        </div>
+                                    </div>
+                                    <div class="ablation-score-box">
+                                        <span class="score-num" id="audioScore">0%</span>
+                                        <span class="score-badge" id="audioChip">Standby</span>
+                                    </div>
+                                </div>
+
+                                <!-- Fusion Highlight -->
+                                <div class="ablation-row row-fusion-highlight">
+                                    <div class="ablation-meta">
+                                        <div class="fusion-title-row">
+                                            <span class="model-name font-bold">SarcasTone Multimodal Fusion</span>
+                                            <span class="fusion-tag">PROD</span>
+                                        </div>
+                                        <span class="model-arch">Concatenated Latent Representation (794-d)</span>
+                                    </div>
+                                    <div class="ablation-track-wrap">
+                                        <div class="ablation-track">
+                                            <div class="ablation-fill fill-accent-gradient" id="fusionMeter"></div>
+                                        </div>
+                                    </div>
+                                    <div class="ablation-score-box">
+                                        <span class="score-num font-bold" id="fusionScore">0%</span>
+                                        <span class="score-badge badge-primary" id="fusionChip">Standby</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Column 2: Acoustic Telemetry & MFCCs -->
+                    <div class="bento-column">
+                        <!-- Acoustic Telemetry Cards -->
+                        <div class="panel subpanel">
+                            <div class="panel-header">
+                                <div class="panel-title-group">
+                                    <h3 class="panel-title">Acoustic Signal Telemetry</h3>
+                                    <p class="panel-desc">Direct measurements from Librosa speech signal processor</p>
+                                </div>
+                            </div>
+                            <div class="telemetry-cards-quad">
+                                <div class="telemetry-card">
+                                    <div class="card-top">
+                                        <span class="card-caption">Pitch Variation ($F_0$)</span>
+                                        <span class="metric-pill" id="pitchBadge">Normal</span>
+                                    </div>
+                                    <div class="card-primary-value" id="pitchValue">-- Hz</div>
+                                    <div class="card-secondary-stats">
+                                        <span>Std: <strong id="pitchStdVal">--</strong></span>
+                                        <span class="stat-sep">·</span>
+                                        <span>Range: <strong id="pitchRangeVal">--</strong></span>
+                                    </div>
+                                    <p class="card-explanation" id="pitchDetail">Fundamental pitch inflection variance across voiced frames.</p>
+                                </div>
+
+                                <div class="telemetry-card">
+                                    <div class="card-top">
+                                        <span class="card-caption">Vocal Energy (RMS)</span>
+                                        <span class="metric-pill" id="energyBadge">Normal</span>
+                                    </div>
+                                    <div class="card-primary-value" id="energyValue">-- RMS</div>
+                                    <div class="card-secondary-stats">
+                                        <span>Peak: <strong id="energyPeakVal">--</strong></span>
+                                    </div>
+                                    <p class="card-explanation" id="energyDetail">Root-mean-square loudness amplitude and acoustic dynamic range.</p>
+                                </div>
+
+                                <div class="telemetry-card">
+                                    <div class="card-top">
+                                        <span class="card-caption">Speaking Rate</span>
+                                        <span class="metric-pill" id="paceBadge">Normal</span>
+                                    </div>
+                                    <div class="card-primary-value" id="tempoValue">-- BPM</div>
+                                    <div class="card-secondary-stats">
+                                        <span>Drawl: <strong id="drawlVal">Standard</strong></span>
+                                    </div>
+                                    <p class="card-explanation" id="paceDetail">Estimated speech cadence and elongation of vowel segments.</p>
+                                </div>
+
+                                <div class="telemetry-card">
+                                    <div class="card-top">
+                                        <span class="card-caption">Spectral Timbre</span>
+                                        <span class="metric-pill" id="timbreBadge">Normal</span>
+                                    </div>
+                                    <div class="card-primary-value" id="centroidValue">-- Hz</div>
+                                    <div class="card-secondary-stats">
+                                        <span>Zero-Crossing: <strong id="zcrVal">--</strong></span>
+                                    </div>
+                                    <p class="card-explanation" id="timbreDetail">Spectral centroid brightness and vocal tract frequency distribution.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 13-Band MFCC Spectrum -->
+                        <div class="panel subpanel">
+                            <div class="panel-header">
+                                <div class="panel-title-group">
+                                    <h3 class="panel-title">13-Band Mel-Frequency Cepstrum</h3>
+                                    <p class="panel-desc">Vocal tract resonance distribution & timbral envelopes</p>
+                                </div>
+                            </div>
+                            <div class="mfcc-analyzer-box">
+                                <div class="mfcc-eq-rack" id="mfccBarsContainer"></div>
+                                <div class="mfcc-band-legend">
+                                    <span class="band-tag band-formants">Bands 1–4: Formants F1/F2</span>
+                                    <span class="band-tag band-f3">Bands 5–8: Formant F3</span>
+                                    <span class="band-tag band-timbre">Bands 9–13: Higher Harmonics</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Modality Influence & Discrepancy Index -->
+                        <div class="panel subpanel">
+                            <div class="panel-header">
+                                <div class="panel-title-group">
+                                    <h3 class="panel-title">Modality Influence & Cross-Modal Discrepancy</h3>
+                                    <p class="panel-desc">Relative influence of text embeddings vs vocal prosody</p>
+                                </div>
+                                <span class="badge-status-marker" id="dominanceChip">Audio Dominant</span>
+                            </div>
+                            <div class="influence-body">
+                                <div class="influence-split-item">
+                                    <div class="split-labels">
+                                        <span>Text Representation (768-d DistilBERT)</span>
+                                        <strong id="textInfluenceScore">50%</strong>
+                                    </div>
+                                    <div class="split-track">
+                                        <div class="split-fill fill-blue" id="textInfluenceBar" style="width: 50%;"></div>
+                                    </div>
+                                </div>
+
+                                <div class="influence-split-item">
+                                    <div class="split-labels">
+                                        <span>Audio Prosody (26-d Acoustic Features)</span>
+                                        <strong id="audioInfluenceScore">50%</strong>
+                                    </div>
+                                    <div class="split-track">
+                                        <div class="split-fill fill-accent-gradient" id="audioInfluenceBar" style="width: 50%;"></div>
+                                    </div>
+                                </div>
+
+                                <div class="discrepancy-index-box">
+                                    <div class="disc-index-header">
+                                        <span class="disc-index-title">Cross-Modal Discrepancy Index</span>
+                                        <strong class="disc-index-value" id="conflictScore">0%</strong>
+                                    </div>
+                                    <div class="disc-index-track">
+                                        <div class="disc-index-fill" id="conflictMeter" style="width: 0%;"></div>
+                                    </div>
+                                    <p class="disc-index-narrative" id="conflictDetail">
+                                        Quantified divergence between semantic polarity and acoustic delivery inflection.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Utterance Sandbox (Counterfactual Testing) -->
+                <div class="panel sandbox-panel">
+                    <div class="panel-header">
+                        <div class="panel-title-group">
+                            <h3 class="panel-title">Counterfactual Utterance Sandbox</h3>
+                            <p class="panel-desc">Modify the transcript or append emoji modifiers to simulate contextual shift</p>
+                        </div>
+                    </div>
+
+                    <div class="sandbox-body">
+                        <div class="textarea-wrapper">
+                            <textarea id="transcriptInput" class="enterprise-textarea" rows="2" placeholder="Spoken transcript will appear here. Edit text to test counterfactual hypotheses..."></textarea>
+                        </div>
+                        
+                        <div class="sandbox-actions-bar">
+                            <div class="emoji-injection-palette" role="toolbar" aria-label="Emoji Modifiers">
+                                <span class="palette-caption">Inject Emoji Modifier:</span>
+                                <div class="emoji-button-row">
+                                    <button type="button" class="emoji-btn" data-emoji="🙃" title="Sarcastic smile">🙃</button>
+                                    <button type="button" class="emoji-btn" data-emoji="🙄" title="Eye roll">🙄</button>
+                                    <button type="button" class="emoji-btn" data-emoji="🤡" title="Clown">🤡</button>
+                                    <button type="button" class="emoji-btn" data-emoji="💀" title="Skull / dead">💀</button>
+                                    <button type="button" class="emoji-btn" data-emoji="🫠" title="Melting face">🫠</button>
+                                    <button type="button" class="emoji-btn" data-emoji="👏" title="Sarcastic clap">👏</button>
+                                    <button type="button" class="emoji-btn" data-emoji="❤️" title="Genuine heart">❤️</button>
+                                    <button type="button" class="emoji-btn" data-emoji="😊" title="Genuine smile">😊</button>
+                                </div>
+                            </div>
+                            <button id="reevaluateBtn" class="btn btn-primary btn-sm">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M23 4v6h-6"></path>
+                                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                                </svg>
+                                <span>Re-evaluate Utterance</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reset Workbench -->
+                <div class="workbench-footer-actions">
+                    <button id="resetBtn" class="btn btn-secondary btn-sm">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                            <path d="M3 3v5h5"></path>
+                        </svg>
+                        <span>Reset Workbench Session</span>
+                    </button>
+                </div>
+            </section>
+        </main>
+
+        <!-- Official Footer -->
+        <footer class="app-footer" role="contentinfo">
+            <div class="footer-inner">
+                <div class="footer-left">
+                    <span class="footer-brand">SarcasTone<span class="brand-tm">™</span></span>
+                    <span class="footer-sep">·</span>
+                    <span class="footer-text">Multimodal Speech Prosody & Lexical Intent Classifier</span>
+                    <span class="footer-sep">·</span>
+                    <span class="footer-text">© 2026 SarcasTone Systems, Inc.</span>
+                </div>
+                <div class="footer-right">
+                    <span class="cert-pill">Local Zero-Egress Inference</span>
+                    <span class="cert-pill">PyTorch 2.15</span>
+                    <span class="cert-pill">WCAG 2.1 AA</span>
+                </div>
+            </div>
+        </footer>
+
+        <!-- Toast Feedback -->
+        <div class="toast-notification hidden" id="toastNotification" role="alert" aria-live="assertive">
+            <span class="toast-bullet"></span>
+            <span id="toastMessage">Summary copied to clipboard</span>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+torch
+torchaudio
+librosa
+soundfile
+transformers
+numpy
+scikit-learn
+flask
+flask-cors
+openai-whisper
+matplotlib
+seaborn
